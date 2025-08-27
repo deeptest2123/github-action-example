@@ -1,22 +1,27 @@
-name: 01 - Building Blocks
+name: "Issues → TestLink Requirement"
 
 on:
-  workflow_dispatch:
+  issues:
+    types: [opened, edited, reopened]
 
 jobs:
-  echo-hello:
+  sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Say hello
-        run: echo "Hello, World!"
+      - uses: actions/checkout@v4
 
-  echo-goodbye:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Failed step
-        run: |
-          exit o
-          exit 1
-      
-      - name: Say goodbye
-        run: echo "Goodbye!"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # No deps needed; stdlib xmlrpc.client is enough
+      - name: Create/Update requirement in TestLink
+        env:
+          TESTLINK_URL: ${{ secrets.TESTLINK_URL }}
+          TESTLINK_DEVKEY: ${{ secrets.TESTLINK_DEVKEY }}
+          TESTLINK_PROJECT_ID: ${{ secrets.TESTLINK_PROJECT_ID }}
+          TESTLINK_REQSPEC_ID: ${{ secrets.TESTLINK_REQSPEC_ID }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python .github/scripts/issue_to_testlink.py
